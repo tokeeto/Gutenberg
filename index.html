@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="">
+    <head>
+        <meta charset="utf-8" />
+        <title></title>
+        <style type="text/css">
+            @page {
+                // change this to fit your paper size
+                // options are: A3, A4, A5, letter, legal, ledger, B4, B5
+                size: A4;
+                // change this line if you need more margin on the paper
+                margin: 1.1em;
+            }
+            html,
+            body {
+                // This is the preview width and height. No need to change this, even
+                // if you change the paper size.
+                width: 210mm;
+                height: 297mm;
+            }
+            .card {
+                width: 63.5mm;
+                height: 88mm;
+                display: inline-block;
+                overflow: hidden;
+                background-position: center;
+                // If your card images do not have bleed, use this line instead:
+                // background-size: 63.5mm, 88mm;
+                // and remove this line (remember to do the same down below):
+                background-size: calc(63.5mm + 6.35mm), calc(88mm + 8.8mm);
+                border-radius: 0.5em;
+                margin-right: 0.3em;
+                margin-bottom: 0.3em;
+            }
+            .card.land {
+                height: 63.5mm;
+                width: 88mm;
+                // If your card images do not have bleed, use this line instead:
+                // background-size: 88mm, 63.5mm;
+                // and remove this line (remember to do the same above):
+                background-size: calc(88mm + 8.8mm), calc(63.5mm + 6.35mm);
+            }
+            .drop-zone {
+                border: 3px dashed #ccc;
+                border-radius: 8px;
+                padding: 20px;
+                text-align: center;
+                color: #666;
+                margin-bottom: 20px;
+                transition: all 0.3s;
+            }
+
+            .drop-zone.active {
+                border-color: #2196f3;
+                background-color: rgba(33, 150, 243, 0.1);
+            }
+            .instructions {
+                max-width: 800px;
+                margin: 0 auto 30px auto;
+                line-height: 1.6;
+            }
+            @media print {
+                .drop-zone,
+                .instructions,
+                .print-button {
+                    display: none;
+                }
+            }
+        </style>
+    </head>
+    <body id="imageContainer">
+        <div class="instructions">
+            <h1>Image Layout Tool</h1>
+            <p>
+                Drag and drop PNG images anywhere on this page to create a
+                layout for printing. The images will automatically be formatted
+                as cards, with landscape images given a wider format.
+            </p>
+        </div>
+        <div class="drop-zone" id="dropZone">
+            <h2>Drop Images Here</h2>
+            <p>Or drop them anywhere on the page</p>
+        </div>
+    </body>
+
+    <script>
+        // Make the entire document a drop zone
+        document.body.addEventListener("dragover", handleDragOver);
+        document.body.addEventListener("drop", handleDrop);
+        document.body.addEventListener("dragenter", () => {
+            document.getElementById("dropZone").classList.add("active");
+        });
+        document.body.addEventListener("dragleave", (e) => {
+            // Only remove the active class if we're leaving the body
+            if (
+                e.relatedTarget === null ||
+                e.relatedTarget.tagName === "HTML"
+            ) {
+                document.getElementById("dropZone").classList.remove("active");
+            }
+        });
+
+        function handleDragOver(e) {
+            e.preventDefault(); // Prevent default to allow drop
+            e.dataTransfer.dropEffect = "copy";
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            document.getElementById("dropZone").classList.remove("active");
+
+            const files = e.dataTransfer.files;
+
+            if (files.length > 0) {
+                processFiles(files);
+            }
+        }
+
+        function processFiles(files) {
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+
+                // Check if file is an image
+                if (file.type.match("image.*")) {
+                    const reader = new FileReader();
+
+                    reader.onload = function (e) {
+                        const img = new Image();
+                        img.src = e.target.result;
+
+                        img.onload = function () {
+                            const card = document.createElement("div");
+                            card.className = "card";
+
+                            // Check if image is wider than tall (landscape orientation)
+                            if (img.width > img.height) {
+                                card.classList.add("land");
+                            }
+
+                            card.style.backgroundImage = `url('${e.target.result}')`;
+
+                            document
+                                .getElementById("imageContainer")
+                                .appendChild(card);
+                        };
+                    };
+
+                    reader.readAsDataURL(file);
+                }
+            }
+        }
+    </script>
+</html>
